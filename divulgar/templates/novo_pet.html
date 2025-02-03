@@ -1,0 +1,155 @@
+<!doctype html>
+{% load static %}
+
+<html lang="pt-BR">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>
+           
+        </title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="{% static 'usuarios/css/cadastro.css' %}" rel="stylesheet">
+        <link href="{% static 'divulgar/css/novo_pet.css' %}" rel="stylesheet">
+   
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+
+       
+
+    </head>
+    <body>
+
+    {% include "partials/barra_navegacao.html" %}
+
+        <div class="container-fluid">
+
+
+            <div class="row">
+                <div class="col-md-2 bg-side sidebar">
+                    <h2>ADO.TE</h2>
+                    <hr>
+                   
+                    
+                </div>
+
+                <div class="col-md">
+                    <div class="wrapper">
+                        <div class="box">
+                            <div class="header-box">
+                                <h3 class="font-vinho">Quero divulgar</h3>
+                                <hr>
+                            </div>
+                            {% if messages %}
+                                <br>
+                                {% for message in messages %}
+                                    <div class="alert {{message.tags}}">
+                                        {{message}}
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                            <div class="body-box">
+                                <form action="{% url 'novo_pet' %}" method="POST" enctype='multipart/form-data'>{% csrf_token %}
+                                    <input type="file" name="foto" class="form-control">
+                                    <br>
+                                    <span class="titulo">Nome:<span>
+                                    <input type="text" class="form-control" name="nome" placeholder="Digite o nome do pet..." value="{{ form_data.nome|default_if_none:'' }}">
+                                    <br>
+                                    <span>Descrição:<span>
+                                    <textarea class="form-control" name="descricao" placeholder="Descrição...">{{ form_data.descricao }}</textarea>
+                                    <br>
+
+                                    <div class="row">
+                                        <div class="col-md">
+                                            <span>CEP:</span>
+                                            <input type="text" placeholder="Digite o CEP do pet..." name="cep" id="cep" class="form-control" value="{{ form_data.cep|default_if_none:'' }}">
+                                        </div>
+
+                                        <div class="col-md">
+                                            <span>Estado:</span>
+                                            <input type="text" id="estado" name="estado" readonly value="{{ form_data.estado|default_if_none:'' }}">
+                                        </div>
+
+                                        <div class="col-md">
+                                            <span>Cidade:</span>
+                                            <input type="text" id="cidade" name="cidade" readonly  value="{{ form_data.cidade|default_if_none:'' }}">
+                                        </div>
+                                    </div>
+                                    <br>
+                                    <span>Telefone para contato:</span>
+                                    <input type="text" placeholder="Digite o seu telefone..." name="telefone" id="telefone"  class="form-control" value="{{ form_data.telefone|default_if_none:'' }}">
+                                    <br>
+                                    <span>Tags:</span>
+                                    <select name="tags" multiple class="form-select">
+                                        {% for opcao_tag in opcoes_tags %}
+                                            <option value="{{ opcao_tag.id }}" {% if opcao_tag.id|stringformat:"s" in tag_form %}selected{% endif %}>{{ opcao_tag.tag }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    
+                                    <br>
+                                    </span>Raça:</span>
+                                    <select name="raca" class="form-select">
+                                        {% for opcao_raca in opcoes_racas %}
+                                            <option value="{{ opcao_raca.id }}" {% if opcao_raca.id|stringformat:"s" in form_data.raca %}selected{% endif %}>
+                                                {{ opcao_raca.raca }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+
+                                    <input type="submit" value="ENVIAR" class="btn-custom-primary">
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+
+        </div>
+
+        
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            $(document).ready(function(){
+                $('#telefone').mask('(00) 00000-0000');
+            });
+        </script>
+
+        <script>
+            $(document).ready(function(){
+                $('#cep').mask('00000-000');
+            });
+        </script>
+        
+    
+        <script>
+            $(document).ready(function(){
+                $('#cep').on('blur', function(){
+                    // Executa quando o campo perde o foco
+                    $.ajax({
+                        url: '/divulgar/buscar_endereco/',
+                        type: 'POST',
+                        data: {
+                            'cep': $(this).val(),
+                            'csrfmiddlewaretoken': '{{ csrf_token }}'
+                        },
+                        success: function(data){
+                            // Atualiza os campos de localidade e uf com os dados recebidos
+                            if (data.status === 'sucesso') {
+                                $('#cidade').val(data.localidade);
+                                $('#estado').val(data.uf);
+                            } else {
+                                alert(data.message);
+                            }
+                        },
+                        error: function() {
+                            alert("Erro ao buscar endereço");
+                        }
+                    });
+                });
+            });
+        </script>
+    </body>
+    </html>
+
